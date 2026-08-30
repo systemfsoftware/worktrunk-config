@@ -25,24 +25,9 @@ deno task check
 
 The hooks execute directly with `deno run` using explicit permission flags declared in each script's shebang.
 
-## Architecture
+## Design
 
-Hooks in this repository are decoupled into two distinct structural layers:
-
-- **Executable Hooks (`*.ts`):** Top-level standalone scripts targeted by `wt.toml` lifecycle events. Each hook is a self-contained command-line entrypoint that reads positional paths (`{{worktree_path}}` and optional `{{primary_path}}`) from `worktrunk` and runs without exporting library code.
-- **Core Library (`lib/`):** Reusable platform utilities providing robust git directory resolution, resilient relative path mapping that gracefully handles cross-device boundaries, and common filesystem assertions.
-
-```
-worktrunk-config/
-├── *.ts              # Standalone CLI lifecycle hooks
-├── lib/
-│   ├── fs.ts         # Filesystem helpers
-│   ├── git.ts        # Git directory resolution and subprocess helpers
-│   ├── paths.ts      # Resilient path relativity utilities
-│   └── mod.ts        # Library module exports
-├── deno.json         # Deno runtime tasks and linting config
-└── dprint.json       # Code formatting configuration
-```
+Top-level scripts at the repository root are standalone CLI entrypoints invoked by `worktrunk` lifecycle events. Shared helpers (git resolution, relative path mapping, filesystem utilities) live under `lib/`.
 
 ## Configuration
 

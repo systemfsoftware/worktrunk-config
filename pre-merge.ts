@@ -6,7 +6,6 @@ import { runGit } from './lib/git.ts'
 const ISSUE_PATTERNS = [/^[0-9].*-.*\.md$/, /^T[0-9a-fA-F].*-.*\.md$/]
 
 async function preMerge(worktreePath: string): Promise<void> {
-  let removed = 0
   for await (const entry of Deno.readDir(worktreePath)) {
     if (!ISSUE_PATTERNS.some((re) => re.test(entry.name))) continue
     const full = join(worktreePath, entry.name)
@@ -14,12 +13,10 @@ async function preMerge(worktreePath: string): Promise<void> {
     try {
       await Deno.remove(full)
       console.log(`pre-merge: removed symlinked issue ${entry.name}`)
-      removed++
     } catch (err) {
       console.error(`pre-merge: failed to remove ${entry.name}: ${err}`)
     }
   }
-  if (removed === 0) return
   const { code } = await runGit(['add', '-A'], worktreePath)
   if (code !== 0) {
     console.error(`pre-merge: git add -A failed (exit ${code})`)

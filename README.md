@@ -7,8 +7,8 @@ When creating isolated git worktrees, new checkouts often start cold: index data
 ```toml
 # .config/wt.toml
 [hooks]
-pre-start = "deno run --allow-read --allow-write --allow-run --allow-env ./pre-start.ts {{worktree_path}} {{primary_path}}"
-post-start = "deno run --allow-read --allow-write --allow-run --allow-env ./copy-codegraph.ts {{worktree_path}} {{primary_path}}"
+pre-start = "deno run --allow-read --allow-write --allow-run --allow-env ./pre-start.ts {{worktree_path}} {{primary_worktree_path}}"
+post-start = "deno run --allow-read --allow-write --allow-run --allow-env ./copy-codegraph.ts {{worktree_path}} {{primary_worktree_path}}"
 post-switch = "deno run --allow-run ./post-switch.ts {{worktree_path}}"
 pre-merge = "deno run --allow-read --allow-write --allow-run ./pre-merge.ts {{worktree_path}}"
 ```

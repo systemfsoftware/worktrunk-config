@@ -1,7 +1,7 @@
 {
   "description": "Worktrunk worktree hooks",
   "tasks": {
-    "check": "dprint check && deno lint",
+    "check": "dprint check && deno lint && deno check *.ts lib/*.ts",
     "lint": "deno lint",
     "fmt": "dprint fmt",
     "fmt:check": "dprint check",

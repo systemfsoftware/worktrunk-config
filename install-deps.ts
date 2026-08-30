@@ -44,20 +44,27 @@ async function installDeps(worktreePath: string): Promise<void> {
   }
   if (mgr.cmd[0] === 'pip-install') {
     let cmd = new Deno.Command('pip', { args: ['install', '-e', '.'], cwd: worktreePath })
-    const { code } = await cmd.output()
+    let { code } = await cmd.output()
     if (code !== 0) {
       cmd = new Deno.Command('pip', {
         args: ['install', '-r', 'requirements.txt'],
         cwd: worktreePath,
       })
-      await cmd.output()
+      ;({ code } = await cmd.output())
+      if (code !== 0) {
+        console.error(`install-deps: pip install exited ${code}`)
+        Deno.exit(code)
+      }
     }
     console.log('install-deps: done')
     return
   }
   const cmd = new Deno.Command(mgr.cmd[0], { args: mgr.cmd.slice(1), cwd: worktreePath })
   const { code } = await cmd.output()
-  if (code !== 0) console.error(`install-deps: ${mgr.cmd.join(' ')} exited ${code}`)
+  if (code !== 0) {
+    console.error(`install-deps: ${mgr.cmd.join(' ')} exited ${code}`)
+    Deno.exit(code)
+  }
   console.log('install-deps: done')
 }
 

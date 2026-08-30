@@ -1,7 +1,7 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write --allow-run --allow-env
 
 function sanitizeInstance(name: string): string {
-  let s = name.replace(/[^A-Za-z0-9_.-]/g, '-').replace(/--+/g, '-')
+  let s = name.replace(/[^A-Za-z0-9_.-]/g, '-').replace(/--/g, '-')
   s = s.replace(/^[-_.]+/, '').replace(/[-_.]+$/, '')
   return s || 'root'
 }
@@ -51,7 +51,7 @@ async function provisionMcp(worktreePath: string): Promise<void> {
     }
   }
 
-  const base = worktreePath.split('/').at(-1) ?? 'root'
+  const base = worktreePath.replace(/\/+$/, '').split('/').at(-1) ?? 'root'
   const instance = sanitizeInstance(base)
   const socket = `${
     Deno.env.get('HOME')

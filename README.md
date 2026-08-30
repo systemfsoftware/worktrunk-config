@@ -50,20 +50,10 @@ deno run --allow-read --allow-write --allow-run --allow-env ./pre-start.ts /path
 
 ## Hooks
 
-| Script | Trigger | What it does |
-| --- | --- | --- |
-| `pre-start.ts` | `pre-start` | Converts `gitdir` to relative, clears `extensions.relativeWorktrees`, symlinks `.repos`, `.issues`, `wiki` |
-| `copy-codegraph.ts` | `post-start` | Warm-copies `.codegraph/codegraph.db` (sqlite backup → reflink → copy), then `codegraph init` |
-| `codegraph-worktree-mcp.ts` | `post-start` | Provisions `worktree/.mcp.json` → `socat` entry for host socket |
-| `install-deps.ts` | `post-start` | Detects lockfile and runs `pnpm install` / `npm ci` / `yarn` / `bun` / `cargo` / `go mod download` |
-| `generate-artifacts.ts` | `post-start` | Runs `pnpm build` / `npm run build` / `cargo build` so checks are green |
-| `post-switch.ts` | `post-switch` | Unsets `extensions.relativeWorktrees` for GitKraken |
-| `pre-merge.ts` | `pre-merge` | Removes symlinked issue files, `git add -A` |
-| `convert-to-relative-paths.ts` | manual | Bulk-converts `*/.git` files under a shared root |
-| `worktree-to-relative.ts` | manual | Converts `.git/worktrees/*/gitdir` to relative |
+Each `*.ts` at the repo root is a plain CLI for a `wt.toml` trigger — `pre-start`, `post-start`, `post-switch`, `pre-merge`, or manual. See the `*.ts` files at the root for the current list; shared logic lives in `lib/` (`lib/git.ts`, `lib/paths.ts`, `lib/fs.ts`).
 
 > [!NOTE]
-> All scripts are plain CLIs — no exports. Shared logic lives in `lib/` (`lib/git.ts`, `lib/paths.ts`, `lib/fs.ts`).
+> All scripts are plain CLIs — no exports. Shared logic lives in `lib/`.
 
 ## Configuration
 

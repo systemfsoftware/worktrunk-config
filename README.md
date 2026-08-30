@@ -1,6 +1,6 @@
 # worktrunk-config
 
-> Deno worktree hooks for `worktrunk` — the 10 bash hooks from `systemfsoftware` rewritten as Deno scripts that live at the repo root.
+> Deno worktree hooks for `worktrunk` — the bash hooks from `systemfsoftware` rewritten as Deno scripts that live at the repo root.
 
 `worktrunk` creates linked worktrees. These hooks warm the CodeGraph index, fix relative `gitdir` paths, symlink shared dirs, and install deps so a new worktree is ready in seconds.
 

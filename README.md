@@ -1,85 +1,72 @@
 # worktrunk-config
 
-> Deno worktree hooks for `worktrunk` — the bash hooks from `systemfsoftware` rewritten as Deno scripts that live at the repo root.
+> Deno worktree hooks for `worktrunk` automating environment setup, warm-copy indexing, and path isolation.
 
-`worktrunk` creates linked worktrees. These hooks warm the CodeGraph index, fix relative `gitdir` paths, symlink shared dirs, and install deps so a new worktree is ready in seconds.
+When creating isolated git worktrees, new checkouts often start cold: index databases must be rebuilt from scratch, nested `.git` references break across directory boundaries, and development dependencies require manual setup. This repository provides executable TypeScript hooks that wire into `worktrunk` lifecycle events (`pre-start`, `post-start`, `post-switch`, `pre-merge`) to make every worktree immediately ready for development.
 
 ```toml
 # .config/wt.toml
 [hooks]
-pre-start  = "deno run --allow-read --allow-write --allow-run --allow-env ./pre-start.ts {{worktree_path}}"
-post-switch = "deno run --allow-run ./post-switch.ts {{worktree_path}}"
-pre-merge  = "deno run --allow-read --allow-write --allow-run ./pre-merge.ts {{worktree_path}}"
-```
-
-## Why this exists
-
-`worktrunk` without hooks gives you an empty worktree — no index, broken `gitdir` on shared mounts, missing `.repos`/`wiki` symlinks. This repo is the Deno replacement for the bash `scripts/tools/worktrunk/*.sh` that previously did that work. Forward-looking: no exported functions in scripts, `lib/` split into focused modules, `dprint` formatting.
-
-## Install
-
-Requires [Deno 2.9+](https://deno.land/) and `dprint` for formatting.
-
-```bash
-git clone https://github.com/systemfsoftware/worktrunk-config.git
-cd worktrunk-config
-deno task check   # dprint check && deno lint
-```
-
-No publish step — `wt.toml` runs the scripts directly via `deno run`.
-
-## Usage
-
-Wire the hooks in `wt.toml` (or `.config/wt.toml` at the primary repo):
-
-```toml
-[hooks]
-pre-start  = "deno run --allow-read --allow-write --allow-run --allow-env ./pre-start.ts {{worktree_path}} {{primary_path}}"
-post-switch = "deno run --allow-run ./post-switch.ts {{worktree_path}}"
-pre-merge  = "deno run --allow-read --allow-write --allow-run ./pre-merge.ts {{worktree_path}}"
+pre-start = "deno run --allow-read --allow-write --allow-run --allow-env ./pre-start.ts {{worktree_path}} {{primary_path}}"
 post-start = "deno run --allow-read --allow-write --allow-run --allow-env ./copy-codegraph.ts {{worktree_path}} {{primary_path}}"
+post-switch = "deno run --allow-run ./post-switch.ts {{worktree_path}}"
+pre-merge = "deno run --allow-read --allow-write --allow-run ./pre-merge.ts {{worktree_path}}"
 ```
 
-Run a hook manually:
+## Quick Start
+
+Ensure [Deno](https://deno.land/) is installed on your workstation, then verify the codebase:
 
 ```bash
-deno run --allow-read --allow-write --allow-run --allow-env ./pre-start.ts /path/to/worktree
-# -> pre-start: .repos -> ../primary/.repos
-# -> pre-start: wiki -> ../primary/wiki
+git clone https://github.com/systemfsoftware/worktrunk-scripts.git
+cd worktrunk-scripts
+deno task check
 ```
 
-## Hooks
+The hooks execute directly with `deno run` using explicit permission flags declared in each script's shebang.
 
-Each `*.ts` at the repo root is a plain CLI for a `wt.toml` trigger — `pre-start`, `post-start`, `post-switch`, `pre-merge`, or manual. See the `*.ts` files at the root for the current list; shared logic lives in `lib/` (`lib/git.ts`, `lib/paths.ts`, `lib/fs.ts`).
+## Architecture
 
-> [!NOTE]
-> All scripts are plain CLIs — no exports. Shared logic lives in `lib/`.
+Hooks in this repository are decoupled into two distinct structural layers:
+
+- **Executable Hooks (`*.ts`):** Top-level standalone scripts targeted by `wt.toml` lifecycle events. Each hook is a self-contained command-line entrypoint that reads positional paths (`{{worktree_path}}` and optional `{{primary_path}}`) from `worktrunk` and runs without exporting library code.
+- **Core Library (`lib/`):** Reusable platform utilities providing robust git directory resolution, resilient relative path mapping that gracefully handles cross-device boundaries, and common filesystem assertions.
+
+```
+worktrunk-config/
+├── *.ts              # Standalone CLI lifecycle hooks
+├── lib/
+│   ├── fs.ts         # Filesystem helpers
+│   ├── git.ts        # Git directory resolution and subprocess helpers
+│   ├── paths.ts      # Resilient path relativity utilities
+│   └── mod.ts        # Library module exports
+├── deno.json         # Deno runtime tasks and linting config
+└── dprint.json       # Code formatting configuration
+```
 
 ## Configuration
 
-Hooks read `{{worktree_path}}` as first arg and optional `{{primary_path}}` as second. When `primary_path` is omitted, `lib/git.ts:resolvePrimaryRepo` derives it via `git rev-parse --git-common-dir`. No config file.
+In your primary repository, configure `worktrunk` to call the desired hook scripts in `.config/wt.toml`. Every script accepts standard arguments supplied by the runner:
 
-## Comparison
+```bash
+deno run --allow-read --allow-write --allow-run --allow-env ./<hook-name>.ts <worktree_path> [primary_path]
+```
 
-| Feature | bash `*.sh` | Deno `*.ts` |
-| --- | --- | --- |
-| Path handling | `realpath --relative-to` (fails on missing) | `tryRelative` returns `null` |
-| MCP provisioning | `python3` heredoc | `Deno.readTextFile` + `JSON.parse` |
-| DB warm copy | shell fallback chain | `Deno.copyFile` with `sqlite3 PRAGMA quick_check` |
-| Permissions | implicit | exact `--allow-*` in shebang |
+If the secondary `primary_path` argument is omitted, the hook automatically resolves the primary repository root using the shared git common directory.
 
-## Troubleshooting
+## Quality Gates
 
-**`gitdir: ... -> ...` not printed?** Primary has no `.git/worktrees` yet — `pre-start` skips that step.
+Code formatting and linting are enforced via `dprint` and `deno lint`:
 
-**`codegraph CLI not found, skipping init`?** Install `codegraph` via `~/.local/bin/codegraph` or `code` in PATH. Warm copy still skips gracefully.
-
-**`dprint check` fails?** Run `dprint fmt` — repo uses `dprint.json` (`lineWidth:120`, `asi`, `preferSingle`) not `deno fmt`.
+```bash
+deno task fmt       # Format all files using dprint
+deno task check     # Run dprint verification and deno lint
+```
 
 ## Contributing
 
-Development setup and workflow: [AGENTS.md](AGENTS.md) (or `docs/`).
+For internal development procedures, agent instructions, and architecture patterns, see [docs/](docs/).
 
 ## License
 
-Same as `systemfsoftware` — see [LICENSE](LICENSE) if present.
+See [LICENSE](LICENSE) for terms.

@@ -50,7 +50,7 @@ deno task check     # Run dprint verification and deno lint
 
 ## Contributing
 
-For internal development procedures, agent instructions, and architecture patterns, see [docs/](docs/).
+Development setup, conventions, and workflow: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

@@ -1,16 +1,8 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write --allow-run
-const ISSUE_GLOBS = ['[0-9]*-*.md', 'T[0-9a-fA-F]*-*.md']
-
-function globToRegExp(glob: string): RegExp {
-  return new RegExp(
-    '^' +
-      glob.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.') + '$',
-  )
-}
+const ISSUE_PATTERNS = [/^[0-9].*-.*\.md$/, /^T[0-9a-fA-F].*-.*\.md$/]
 
 async function preMerge(worktreePath: string): Promise<void> {
-  for (const pattern of ISSUE_GLOBS) {
-    const re = globToRegExp(pattern)
+  for (const re of ISSUE_PATTERNS) {
     for await (const entry of Deno.readDir(worktreePath)) {
       if (!re.test(entry.name)) continue
       const full = `${worktreePath}/${entry.name}`

@@ -28,4 +28,4 @@ jobs:
       - name: deno lint
         run: deno lint
       - name: deno check
-        run: deno check *.ts lib/*.ts
+        run: deno check scripts/*.ts scripts/lib/*.ts

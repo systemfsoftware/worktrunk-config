@@ -11,6 +11,6 @@ deno task check
 
 ## Conventions
 
-- Hook scripts at the repository root are standalone CLIs (no exports).
-- Shared code lives in `lib/`.
+- Hook scripts under `scripts/` are standalone CLIs (no exports).
+- Shared code lives in `scripts/lib/`.
 - Commits follow [Conventional Commits](https://www.conventionalcommits.org/).

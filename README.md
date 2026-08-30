@@ -7,10 +7,10 @@ When creating isolated git worktrees, new checkouts often start cold: index data
 ```toml
 # .config/wt.toml
 [hooks]
-pre-start = "deno run --allow-read --allow-write --allow-run --allow-env ./pre-start.ts {{worktree_path}} {{primary_worktree_path}}"
-post-start = "deno run --allow-read --allow-write --allow-run --allow-env ./copy-codegraph.ts {{worktree_path}} {{primary_worktree_path}}"
-post-switch = "deno run --allow-run ./post-switch.ts {{worktree_path}}"
-pre-merge = "deno run --allow-read --allow-write --allow-run ./pre-merge.ts {{worktree_path}}"
+pre-start = "deno run --allow-read --allow-write --allow-run --allow-env ./scripts/pre-start.ts {{worktree_path}} {{primary_worktree_path}}"
+post-start = "deno run --allow-read --allow-write --allow-run --allow-env ./scripts/copy-codegraph.ts {{worktree_path}} {{primary_worktree_path}}"
+post-switch = "deno run --allow-run ./scripts/post-switch.ts {{worktree_path}}"
+pre-merge = "deno run --allow-read --allow-write --allow-run ./scripts/pre-merge.ts {{worktree_path}}"
 ```
 
 ## Quick Start
@@ -27,14 +27,14 @@ The hooks execute directly with `deno run` using explicit permission flags decla
 
 ## Design
 
-Top-level scripts at the repository root are standalone CLI entrypoints invoked by `worktrunk` lifecycle events. Shared helpers (git resolution, relative path mapping, filesystem utilities) live under `lib/`.
+Scripts under `scripts/` are standalone CLI entrypoints invoked by `worktrunk` lifecycle events. Shared helpers (git resolution, relative path mapping, filesystem utilities) live under `scripts/lib/`.
 
 ## Configuration
 
 In your primary repository, configure `worktrunk` to call the desired hook scripts in `.config/wt.toml`. Every script accepts standard arguments supplied by the runner:
 
 ```bash
-deno run --allow-read --allow-write --allow-run --allow-env ./<hook-name>.ts <worktree_path> [primary_path]
+deno run --allow-read --allow-write --allow-run --allow-env ./scripts/<hook-name>.ts <worktree_path> [primary_path]
 ```
 
 If the secondary `primary_path` argument is omitted, the hook automatically resolves the primary repository root using the shared git common directory.

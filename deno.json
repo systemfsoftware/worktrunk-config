@@ -1,16 +1,16 @@
 {
   "description": "Worktrunk worktree hooks",
   "tasks": {
-    "check": "dprint check && deno lint && deno check *.ts lib/*.ts",
+    "check": "dprint check && deno lint && deno check scripts/*.ts scripts/lib/*.ts",
     "lint": "deno lint",
     "fmt": "dprint fmt",
     "fmt:check": "dprint check",
     "test": "deno test --allow-read --allow-write --allow-run --allow-env"
   },
   "imports": {
-    "@std/path": "jsr:@std/path@^1.0.9",
+    "@std/assert": "jsr:@std/assert@^1.0.14",
     "@std/fs": "jsr:@std/fs@^1.0.19",
-    "@std/assert": "jsr:@std/assert@^1.0.14"
+    "@std/path": "jsr:@std/path@^1.0.9"
   },
   "lint": {
     "rules": {
